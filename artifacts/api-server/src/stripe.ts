@@ -32,13 +32,28 @@ async function stripeRequest<T>(
   path: string,
   options: { method?: string; body?: URLSearchParams } = {},
 ): Promise<T> {
-  const response = await connectors.proxy("stripe", path, {
-    method: options.method ?? "GET",
-    body: options.body,
-    headers: options.body
-      ? { "Content-Type": "application/x-www-form-urlencoded" }
-      : undefined,
-  });
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+  let response: Response;
+
+  if (stripeSecretKey) {
+    const url = `https://api.stripe.com${path}`;
+    response = await fetch(url, {
+      method: options.method ?? "GET",
+      body: options.body,
+      headers: {
+        Authorization: `Bearer ${stripeSecretKey}`,
+        ...(options.body ? { "Content-Type": "application/x-www-form-urlencoded" } : {}),
+      },
+    });
+  } else {
+    response = await connectors.proxy("stripe", path, {
+      method: options.method ?? "GET",
+      body: options.body,
+      headers: options.body
+        ? { "Content-Type": "application/x-www-form-urlencoded" }
+        : undefined,
+    });
+  }
 
   const raw = await response.text();
   let payload: unknown = null;
