@@ -73,6 +73,7 @@ export const productDefinitions = [
     description: "A soft-structured carryall for slow weekends and quick escapes.",
     amount: 14800,
     category: "Carry",
+    imageUrl: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80",
   },
   {
     slug: "stoneware-mug",
@@ -80,6 +81,7 @@ export const productDefinitions = [
     description: "Hand-finished ceramic with a warm, grounding weight in the hand.",
     amount: 3200,
     category: "Home",
+    imageUrl: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80",
   },
   {
     slug: "everyday-notebook",
@@ -87,6 +89,7 @@ export const productDefinitions = [
     description: "A clothbound place for lists, sketches, and half-formed ideas.",
     amount: 1800,
     category: "Paper",
+    imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80",
   },
   {
     slug: "wool-throw",
@@ -94,6 +97,7 @@ export const productDefinitions = [
     description: "A generous layer of soft wool for reading corners and cool evenings.",
     amount: 9600,
     category: "Home",
+    imageUrl: "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=800&q=80",
   },
 ] as const;
 
@@ -105,7 +109,7 @@ export type ShopProduct = {
   price: number;
   currency: string;
   category: string;
-  imageUrl: null;
+  imageUrl: string | null;
 };
 
 let catalogPromise: Promise<ShopProduct[]> | undefined;
@@ -156,7 +160,7 @@ const defaultCatalog: ShopProduct[] = productDefinitions.map((def, index) => ({
   price: def.amount,
   currency: "usd",
   category: def.category,
-  imageUrl: null,
+  imageUrl: def.imageUrl,
 }));
 
 async function buildCatalog(): Promise<ShopProduct[]> {
@@ -203,7 +207,7 @@ async function buildCatalog(): Promise<ShopProduct[]> {
         price: price.unit_amount,
         currency: price.currency,
         category: definition.category,
-        imageUrl: null,
+        imageUrl: definition.imageUrl,
       });
     }
 
