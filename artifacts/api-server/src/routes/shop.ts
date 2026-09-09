@@ -47,7 +47,11 @@ router.post("/checkout", async (req, res) => {
       return res.status(400).json({ error: "One or more products are unavailable" });
     }
 
-    const origin = `${req.protocol}://${req.get("host")}`;
+    const origin =
+      req.get("origin") ||
+      (req.get("referer")
+        ? new URL(req.get("referer")!).origin
+        : `${req.protocol}://${req.get("host")}`);
     const response = await createStripeCheckoutSession(input.items, origin);
     return res.json(CreateCheckoutSessionResponse.parse(response));
   } catch (error) {
