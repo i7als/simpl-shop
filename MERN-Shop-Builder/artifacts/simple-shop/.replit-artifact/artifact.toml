@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Simple Shop"
+description = "A full-stack storefront for browsing products, managing a cart, and completing secure Stripe test-mode checkout."
+version = "1.0.0"
+id = "artifacts/simple-shop"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18833
+
+[services.development]
+run = "pnpm --filter @workspace/simple-shop run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/simple-shop", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/simple-shop/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18833"
+BASE_PATH = "/"

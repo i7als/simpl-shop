@@ -1,0 +1,162 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: shop
+    description: Storefront and checkout operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /products:
+    get:
+      operationId: listProducts
+      tags: [shop]
+      summary: List available products
+      responses:
+        "200":
+          description: Available products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+  /shop-summary:
+    get:
+      operationId: getShopSummary
+      tags: [shop]
+      summary: Get storefront summary
+      responses:
+        "200":
+          description: Storefront summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShopSummary"
+  /checkout:
+    post:
+      operationId: createCheckoutSession
+      tags: [shop]
+      summary: Create a Stripe Checkout session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckoutInput"
+      responses:
+        "200":
+          description: Checkout session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckoutSession"
+        "400":
+          description: Invalid checkout request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "502":
+          description: Payment provider error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+        priceId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: integer
+          description: Price in the smallest currency unit
+        currency:
+          type: string
+        category:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+      required: [id, priceId, name, description, price, currency, category, imageUrl]
+    ShopSummary:
+      type: object
+      properties:
+        productCount:
+          type: integer
+        categories:
+          type: array
+          items:
+            type: string
+        currency:
+          type: string
+      required: [productCount, categories, currency]
+    CheckoutItem:
+      type: object
+      properties:
+        priceId:
+          type: string
+          minLength: 1
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 20
+      required: [priceId, quantity]
+    CheckoutInput:
+      type: object
+      properties:
+        items:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            $ref: "#/components/schemas/CheckoutItem"
+      required: [items]
+    CheckoutSession:
+      type: object
+      properties:
+        url:
+          type: string
+        sessionId:
+          type: string
+      required: [url, sessionId]
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
