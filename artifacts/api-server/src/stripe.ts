@@ -246,15 +246,32 @@ export async function createStripeCheckoutSession(
   items: Array<{ priceId: string; quantity: number }>,
   origin: string,
 ) {
+  const catalog = await getCatalog();
+  const catalogByPriceId = new Map(catalog.map((p) => [p.priceId, p]));
+
   const body = new URLSearchParams();
   body.set("mode", "payment");
   body.set("success_url", `${origin}/success?session_id={CHECKOUT_SESSION_ID}`);
   body.set("cancel_url", `${origin}/cancel`);
   body.set("billing_address_collection", "auto");
-  body.set("shipping_address_collection[allowed_countries][0]", "US");
 
   items.forEach((item, index) => {
-    body.set(`line_items[${index}][price]`, item.priceId);
+    const product = catalogByPriceId.get(item.priceId);
+
+    if (product) {
+      body.set(`line_items[${index}][price_data][currency]`, (product.currency || "usd").toLowerCase());
+      body.set(`line_items[${index}][price_data][unit_amount]`, String(product.price));
+      body.set(`line_items[${index}][price_data][product_data][name]`, product.name);
+      if (product.description) {
+        body.set(`line_items[${index}][price_data][product_data][description]`, product.description);
+      }
+      if (product.imageUrl) {
+        body.set(`line_items[${index}][price_data][product_data][images][0]`, product.imageUrl);
+      }
+    } else {
+      body.set(`line_items[${index}][price]`, item.priceId);
+    }
+
     body.set(`line_items[${index}][quantity]`, String(item.quantity));
   });
 
@@ -270,7 +287,10 @@ export async function createStripeCheckoutSession(
 
     return { url: session.url, sessionId: session.id };
   } catch (error) {
-    console.warn("Stripe checkout session creation failed, returning demo checkout:", error);
-    return { url: `${origin}/success?session_id=demo_session`, sessionId: "demo_session" };
+    console.error("Stripe checkout session creation failed:", error);
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return { url: `${origin}/success?session_id=demo_session`, sessionId: "demo_session" };
+    }
+    throw error;
   }
 }
