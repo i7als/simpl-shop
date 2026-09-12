@@ -32,7 +32,13 @@ async function stripeRequest<T>(
   path: string,
   options: { method?: string; body?: URLSearchParams } = {},
 ): Promise<T> {
-  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+  const stripeSecretKey =
+    process.env.STRIPE_SECRET_KEY ||
+    process.env.STRIPE_KEY ||
+    process.env.SECRET_KEY ||
+    process.env["Secret key"] ||
+    process.env["Secret-key"] ||
+    process.env["secret-key"];
   let response: Response;
 
   if (stripeSecretKey) {
